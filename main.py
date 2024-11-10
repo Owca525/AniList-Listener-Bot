@@ -12,7 +12,7 @@ import os
 
 __current_location__ = __file__[:__file__.rfind("/")]
 
-__version__ = "1.0"
+__version__ = "1.1"
 __anilist_database__ = __current_location__ + "/db/anilist.db"
 status: str = "online"
 status_send: int = 0
