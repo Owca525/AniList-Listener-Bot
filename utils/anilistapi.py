@@ -113,7 +113,7 @@ headers = {
     'Accept': 'application/json'
 }
 
-cache = {}
+cache: dict = {}
 
 async def post(url, json):
     async with httpx.AsyncClient() as client:
@@ -140,13 +140,14 @@ async def fetch_today(page):
         if response.status_code == 200:
             json_stuff = response.json()
             return json_stuff["data"]["Page"]["airingSchedules"]
-        return 404
+        logger.warning(f"Anilistapi message: {response.json()['errors'][0]['message']}")
+        return {}
     except httpx.HTTPError as err:
         logger.error(err)
-        return 404
+        return {}
     except Exception as err:
         logger.error(err)
-        return 404
+        return {}
 
 async def get_today_anime():
     tmp_data = []

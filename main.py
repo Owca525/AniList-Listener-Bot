@@ -10,11 +10,12 @@ import pytz
 import ast
 import os
 
-
 __current_location__ = __file__[:__file__.rfind("/")]
 
 __version__ = "1.0"
 __anilist_database__ = __current_location__ + "/db/anilist.db"
+status: str = "online"
+status_send: int = 0
 
 inf = inflect.engine()
 
@@ -61,11 +62,7 @@ async def on_ready() -> None:
             except Exception as error:
                 logger.critical(f'{error}')
 
-    await client.change_presence(
-        status=discord.Status.idle,
-        activity=discord.activity.Game(f"My prefix is {client.command_prefix}")
-    )
-
+    await change_status()
     await client.wait_until_ready() 
     logger.info(f'Connected To {client.user.name}')
     await anilist_background_task.start()
@@ -114,6 +111,7 @@ async def preaper_to_send(data: dict, server: int, channel: int, anime_today_lis
 
 async def get_data_server(server, anime_today):
     try:
+        logger.info(f"get_data_server: {server}, {anime_today}")
         tables_data = await get_data(server[1:])
         for item in tables_data:
             task = [preaper_to_send(data=items, server=item[1], channel=item[0], anime_today_list=anime_today) for items in ast.literal_eval(item[4])]
@@ -133,11 +131,34 @@ async def clear_cache():
     except Exception as e:
         logger.error(f"Failed clear cache: {e}")
 
+async def change_status():
+    global status_send
+    if status_send != 0 and status == "offline":
+        await client.change_presence(
+            status=discord.Status.do_not_disturb,
+            activity=discord.Game(name="Api anilist is offline"),
+        )
+        status_send = 0
+    if status_send != 1 and status == "online":
+        await client.change_presence(
+            status=discord.Status.idle,
+            activity=discord.activity.Game(f"My prefix is {client.command_prefix}")
+        )
+        status_send = 1
+
 @tasks.loop(minutes=10)
 async def anilist_background_task() -> None:
     try:
+        global status
         logger.info("Running Task anilist_background_task")
-        task = [sort_data_name(item) for item in await get_today_anime()]
+        today = await get_today_anime()
+        if today == []:
+            status = "offline"
+            await change_status()
+            return
+        status = "online"
+        await change_status()
+        task = [sort_data_name(item) for item in today]
         anime_today = await asyncio.gather(*task)
         task = [get_data_server(item[0], anime_today) for item in await get_all_data()]
         await asyncio.gather(*task)

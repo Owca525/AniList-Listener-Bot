@@ -61,6 +61,12 @@ class devcog(commands.Cog):
 
         await ctx.send(embed=dev_message)
 
+    @commands.command()
+    @commands.is_owner()
+    async def shutdown(self, ctx) -> None:
+        await ctx.send("bot shutdown")
+        exit()
+
 async def setup(client) -> None:
     await client.add_cog(devcog(client))
     logger.info("Dev is online")

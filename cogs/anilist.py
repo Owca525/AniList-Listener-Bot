@@ -102,7 +102,7 @@ class anilistListener(commands.Cog):
         except Exception as e:
             logger.error(e)
             return
-        
+
     @commands.command(name="rmanime")
     @commands.has_permissions(administrator=True)
     async def rmanime(self, ctx, channel_id, *, anime: str) -> None:

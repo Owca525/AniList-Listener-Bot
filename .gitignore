@@ -1,1 +1,12 @@
 /.env
+cogs/__pycache__/anilist.cpython-312.pyc
+cogs/__pycache__/dev.cpython-312.pyc
+cogs/__pycache__/utils.cpython-312.pyc
+logs/
+utils/__pycache__/__init__.cpython-312.pyc
+utils/__pycache__/anilistapi.cpython-312.pyc
+utils/__pycache__/betterlogger.cpython-312.pyc
+utils/__pycache__/SQL.cpython-312.pyc
+__pycache__/main.cpython-312.pyc
+db/
+__pycache__/
