@@ -8,7 +8,7 @@ This is a simple bot for notifying when the next episode of an anime is released
 - httpx 0.27.0
 - inflect 7.3.0
 # Instalation Guide
-Instalacja [Pythona 3.12](https://www.python.org/) <br> <br>
+Installation [Pythona 3.12](https://www.python.org/) <br> <br>
 Cloning the repository
 ```bash
 git clone https://github.com/Owca525/AniList-Listener-Bot.git
