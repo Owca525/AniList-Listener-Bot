@@ -1,9 +1,12 @@
-from utils import logger, add_data, get_data,create_tables, delete_data, update_data, create_connection, search_anime
 from discord.ext import commands
 import datetime
 import discord
 import ast
 import re
+
+from utils import (
+    logger, add_data, get_data,create_tables, delete_data, update_data, create_connection, search_anime
+)
 
 def name_add_text(data: dict):
     return data["name"]
@@ -20,7 +23,7 @@ class anilistCommands(commands.Cog):
     async def anime(self, ctx, *, anime: str) -> None:
         data = await search_anime(anime)
         if data in ([], 404):
-            await ctx.send(f"This anime does not exist")
+            await ctx.send(f":x: This anime does not exist :x:")
             return
 
         nep = data["nextAiringEpisode"]
@@ -56,9 +59,9 @@ class anilistListener(commands.Cog):
     async def adding_data(self, ctx, channel, data: dict) -> None:
         await add_data(ctx.guild.id, (channel, ctx.author.id, ctx.guild.id, datetime.datetime.now(), str(data)))
 
-    @commands.command(name="addanime")
+    @commands.command(name="add")
     @commands.has_permissions(administrator=True)
-    async def addanime(self, ctx, channel: str, *, anime: str) -> None:
+    async def add(self, ctx, channel: str, *, anime: str) -> None:
         try:
             channel = [int(channel) if channel.isdigit() else channel[2:len(channel)-1]][0]
             details = await search_anime(anime)
@@ -79,8 +82,8 @@ class anilistListener(commands.Cog):
             if sql_data == []:
                 await create_tables(server_id=ctx.guild.id)
                 await self.adding_data(ctx, channel, [data])
-                await ctx.send(f"{data['name']} successfully added to the channel: <#{channel}>")
-                logger.info(f"{data['name']} {data['id']} successfully added to the channel {channel} data: {data}")
+                await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
+                logger.info(f"{data['name']}/{data['id']} successfully added to the channel {channel} data: {data}")
                 return
             for item in sql_data:
                 data_dict = ast.literal_eval(item[4])
@@ -92,58 +95,62 @@ class anilistListener(commands.Cog):
                     data_dict.append(data)
                     await update_data(table=ctx.guild.id, name="animeData", key=channel, new=str(data_dict))
                     logger.info(f"{data['name']} {data['id']} successfully added to the channel {channel} data: {data}")
-                    await ctx.send(f"{data['name']} successfully added to the channel <#{channel}>")
+                    await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
                     return
                 else:
-                    await ctx.send(f"{data['name']} successfully added to the channel: <#{channel}>")
-                    logger.info(f"{data['name']} {data['id']} successfully added to the channel {channel} data: {data}")
+                    await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
+                    logger.info(f"{data['name']}/{data['id']} successfully added to the channel {channel} data: {data}")
                     await self.adding_data(ctx, channel, [data])
                     return
         except Exception as e:
+            await ctx.send(":x: Failed to add anime due to an error :x:")
             logger.error(e)
             return
 
-    @commands.command(name="rmanime")
+    @commands.command(name="remove")
     @commands.has_permissions(administrator=True)
-    async def rmanime(self, ctx, channel_id, *, anime: str) -> None:
-        channel = self.client.get_channel(int([int(channel_id) if channel_id.isdigit() else channel_id[2:len(channel_id)-1]][0]))
-        if channel == None:
-            await ctx.send("This channel does not exist")
-            return
-        
-        if anime.lower().replace(" ", "") == "all":
-            await delete_data(ctx.guild.id, channel.id)
-            await ctx.send(f"Removed everything from <#{channel.id}>")
-            return
-        
-        data = await get_data(ctx.guild.id)[0]
-        data_dict = ast.literal_eval(data[4])
-
-        for i, item in enumerate(data):
-            if anime.isdigit() and item["id"] == int(anime):
-                data_dict.pop(i)
-                await update_data(table=ctx.guild.id, name="animeData", key=channel_id, new=str(data_dict))
-                await ctx.send(f"Successfully removed {item['name']} from <#{channel_id}>")
-                logger.info(f"Successfully removed {item['name']} from {channel_id}")
+    async def remove(self, ctx, channel_id, *, anime: str) -> None:
+        try:
+            channel = self.client.get_channel(int([int(channel_id) if channel_id.isdigit() else channel_id[2:len(channel_id)-1]][0]))
+            if channel == None:
+                await ctx.send(":x: This channel does not exist :x:")
                 return
             
-            if anime.lower() == item["name"].lower():
-                data_dict.pop(i)
-                await update_data(table=ctx.guild.id, name="animeData", key=channel_id, new=str(data_dict))
-                logger.info(f"Successfully removed {item['name']} from {channel_id}")
+            if anime.lower().replace(" ", "") == "all":
+                await delete_data(ctx.guild.id, channel.id)
+                await ctx.send(f":white_check_mark: Removed everything from <#{channel.id}>")
                 return
+            
+            data = await get_data(ctx.guild.id)[0]
+            data_dict = ast.literal_eval(data[4])
 
-    @commands.command(name="checkanime")
+            for i, item in enumerate(data):
+                if anime.isdigit() and item["id"] == int(anime):
+                    data_dict.pop(i)
+                    await update_data(table=ctx.guild.id, name="animeData", key=channel_id, new=str(data_dict))
+                    await ctx.send(f":white_check_mark: Successfully removed {item['name']} from <#{channel_id}>")
+                    logger.info(f":white_check_mark: Successfully removed {item['name']} from {channel_id}")
+                    return
+                
+                if anime.lower() == item["name"].lower():
+                    data_dict.pop(i)
+                    await update_data(table=ctx.guild.id, name="animeData", key=channel_id, new=str(data_dict))
+                    logger.info(f":white_check_mark: Successfully removed {item['name']} from {channel_id}")
+                    return
+        except Exception as e:
+            await ctx.send(":x: Failed to remove anime due to an error :x:")
+            logger.error(e)
+            return
+    @commands.command(name="check")
     @commands.has_permissions(administrator=True)
-    async def checkanime(self, ctx) -> None:
+    async def check(self, ctx) -> None:
         conn = await create_connection()
         data = conn.cursor().execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
         data = sum([await get_data(str(item[0][1:])) for item in data], [])
-        embed_message = discord.Embed(title=f"Anime is waiting on the channels", color=discord.Color.magenta())
+        embed_message = discord.Embed(title=f"Anime on the channels", color=discord.Color.magenta())
         for item in data:
-            user = await self.client.fetch_user(item[2])
             channel = self.client.get_channel(int(item[0]))
-            embed_message.add_field(name=f'#{channel}, {item[3][:item[3].rfind(".")]}, {user}',value='\n '.join(list(map(name_add_text, ast.literal_eval(item[4])))),inline=False)
+            embed_message.add_field(name=f'{len(ast.literal_eval(item[4]))} Anime in the #{channel}',value='\n '.join(list(map(name_add_text, ast.literal_eval(item[4])))),inline=False)
         await ctx.send(embed=embed_message)
 
 async def setup(client) -> None:

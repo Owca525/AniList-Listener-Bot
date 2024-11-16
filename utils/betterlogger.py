@@ -4,7 +4,7 @@ import os
 
 __version__ = "1.0.2"
 
-log_folder = __file__[:__file__.rfind("/")].replace("utils", "") + "/logs"
+log_folder = os.path.dirname(__file__).replace("utils", "") + "logs"
 os.makedirs(log_folder, exist_ok=True)
 
 LOG_COLORS = {

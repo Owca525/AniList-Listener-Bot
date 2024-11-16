@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
-from utils import logger
 import httpx
+
+from utils import logger
 
 query_data = '''
 query ($id: Int) {

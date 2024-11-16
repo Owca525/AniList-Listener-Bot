@@ -1,11 +1,14 @@
 from discord.ext import commands
 from datetime import datetime
-from utils import *
 import platform
 import discord
 import asyncio
 import sys
 import os
+
+from utils import (
+    log_file, logger
+)
 
 startTime = datetime.datetime.now()
 
@@ -18,14 +21,14 @@ class devcog(commands.Cog):
     async def sendlog(self,ctx) -> None:
         try:
             file = discord.File(f"{log_file}", filename=str(log_file))
-            await ctx.send(f"Log: {log_file}:", file=file)
+            await ctx.send(f"Log Name File: {os.path.basename(log_file)}", file=file)
         except Exception as e:
             await ctx.send(f'Error: {e}')
 
     @commands.command()
     @commands.is_owner()
     async def ping(self,ctx) -> None:
-        ctx.send(f"Bot Latency: {round(self.client.latency * 1000)}")
+        await ctx.send(f"Bot Latency: {round(self.client.latency * 1000)}")
 
     @commands.command()
     @commands.is_owner()
@@ -33,7 +36,7 @@ class devcog(commands.Cog):
         async with ctx.typing():
             embed = discord.Embed(title='# Reload All cogs #', timestamp=ctx.message.created_at, color=discord.Color.green())
 
-            for cog in os.listdir(f'{__file__[:__file__.rfind("/")+1]}cogs'):
+            for cog in os.listdir(os.path.dirname(__file__)):
                 if cog.endswith('.py') and not cog.startswith('_'):
                     try:
                         cog_name = cog[:-3]

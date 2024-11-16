@@ -1,6 +1,4 @@
 from discord.ext import commands, tasks
-from dotenv import load_dotenv
-from utils import *
 import datetime
 import asyncio
 import discord
@@ -10,20 +8,24 @@ import pytz
 import ast
 import os
 
-__current_location__ = __file__[:__file__.rfind("/")]
+from utils import *
+from utils.config import check_config
 
-__version__ = "1.1"
+__current_location__ = os.path.dirname(__file__)
+
+__version__ = "1.2"
 __anilist_database__ = __current_location__ + "/db/anilist.db"
+
 status: str = "online"
 status_send: int = 0
 
 inf = inflect.engine()
+config_data = check_config()
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = config_data[0]
 
 client = commands.Bot(
-    command_prefix=">",
+    command_prefix=config_data[1],
     help_command=None,
     intents=discord.Intents.all()
 )
@@ -162,12 +164,13 @@ async def anilist_background_task() -> None:
         anime_today = await asyncio.gather(*task)
         task = [get_data_server(item[0], anime_today) for item in await get_all_data()]
         await asyncio.gather(*task)
+        logger.info("The task anilist_background_task completed successfully")
     except Exception as e:
         logger.error(f"Failed task anilist_background_task: {e}")
 
 if __name__ == "__main__":
-    if TOKEN == None:
-        logger.error("Token Missing")
+    if TOKEN == "":
+        logger.error("Token Missing check config.ini")
         exit()
 
     client.run(TOKEN)

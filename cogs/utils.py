@@ -1,7 +1,8 @@
 from discord.ext import commands
+import discord
+
 from main import __version__
 from utils import logger
-import discord
 
 class utils(commands.Cog):
     def __init__(self, client):
@@ -12,12 +13,12 @@ class utils(commands.Cog):
         prefix = self.client.command_prefix
         embed = discord.Embed(title=f"**- Help Page -**", color=discord.Color.green())
         embed.add_field(name=f"{prefix}anime `title anime/id`",value="Taking anime from anilist",inline=False)
-        embed.add_field(name=f"{prefix}addanime `title anime/id`",value="Adding listener anime for channel (admin only)",inline=False)
-        embed.add_field(name=f"{prefix}rmanime `title anime/id/all`",value="Deleting listener for anime (admin only)",inline=False)
-        embed.add_field(name=f"{prefix}checkanime",value="Shows data for channels that have a listener (admin only)",inline=False)
+        embed.add_field(name=f"{prefix}add `channel` `title anime/id`",value="Adding listener anime for channel (admin only)",inline=False)
+        embed.add_field(name=f"{prefix}remove `channel` `title anime/id/all`",value="Deleting listener for anime (admin only)",inline=False)
+        embed.add_field(name=f"{prefix}check",value="Shows data from channels they have a anime (admin only)",inline=False)
         embed.add_field(name=f"{prefix}help",value="Show help commands",inline=False)
         embed.add_field(name=f"{prefix}credits",value="Show credits",inline=False)
-        embed.set_footer(text=f"Bot Version: **{__version__}**")
+        embed.set_footer(text=f"Bot Version: {__version__}")
         await ctx.send(embed=embed)
     
     @commands.command(name="credits")
