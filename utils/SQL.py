@@ -1,5 +1,6 @@
 from main import __anilist_database__
 import sqlite3
+import ast
 
 async def create_connection() -> sqlite3.Connection:
     """Creating Connection To Database"""
@@ -32,6 +33,7 @@ async def get_data(table) -> list:
         conn = await create_connection()
         data = conn.cursor().execute(f"SELECT * FROM s{table}").fetchall()
         conn.close()
+        # print(list(map(lambda x: { "channel_id": x[0], "server_id": x[1], "user_id": x[2], "creation_timestamp": x[3], "animeData": ast.literal_eval(x[4]) }, data)))
         return data
     except sqlite3.OperationalError:
         return []
