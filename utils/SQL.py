@@ -1,3 +1,4 @@
+import asyncio
 from main import __anilist_database__
 import sqlite3
 import ast
@@ -27,24 +28,23 @@ async def add_data(server_id, data) -> None:
         conn.execute(sql, data)
     conn.close()
 
-async def get_data(table) -> list:
+async def get_data(table: str) -> dict:
     """Getting All Data from table"""
     try:
         conn = await create_connection()
-        data = conn.cursor().execute(f"SELECT * FROM s{table}").fetchall()
+        data = conn.cursor().execute(f"SELECT * FROM {table}").fetchall()
         conn.close()
-        # print(list(map(lambda x: { "channel_id": x[0], "server_id": x[1], "user_id": x[2], "creation_timestamp": x[3], "animeData": ast.literal_eval(x[4]) }, data)))
-        return data
+        return list(map(lambda x: { "channel_id": x[0], "server_id": x[1], "user_id": x[2], "creation_timestamp": x[3], "animeData": ast.literal_eval(x[4]) }, data))
     except sqlite3.OperationalError:
         return []
 
-async def get_all_data():
+async def get_all_data() -> list:
     try:
         connection = await create_connection()
         cursor = connection.cursor().execute(f"SELECT name FROM sqlite_master WHERE type='table'")
-        database = cursor.fetchall()
+        servers = cursor.fetchall()
         cursor.close()
-        return database
+        return [await get_data(items[0]) for items in servers]
     except sqlite3.OperationalError:
         return []
 

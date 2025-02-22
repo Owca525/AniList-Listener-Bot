@@ -182,17 +182,20 @@ async def fetch_search(title: str) -> dict:
         logger.error(e)
         return 404
 
-async def search_anime(data: str):
+async def search_anime(data: str) -> dict:
     if data in cache:
         return cache[data]
+
+    if data.isdigit():
+        details = await fetch_details(int(data))
     else:
-        if data.isdigit():
-            details = await fetch_details(int(data))
-        else:
-            details = await fetch_search(data)
+        details = await fetch_search(data)
+    
+    if isinstance(details, int):
+        return []
         
-        if details != 404 and details != [] and isinstance(details, list):
-            cache[data] = details[0]
-            return details[0]
-        cache[data] = details
-        return details
+    if details != [] and isinstance(details, list):
+        cache[data] = details[0]
+        return details[0]
+    cache[data] = details
+    return details

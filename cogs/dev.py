@@ -10,7 +10,7 @@ from utils import (
     log_file, logger
 )
 
-startTime = datetime.datetime.now()
+startTime = datetime.now()
 
 class devcog(commands.Cog):
     def __init__(self, client):

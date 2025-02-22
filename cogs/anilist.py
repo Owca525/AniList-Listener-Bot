@@ -2,7 +2,6 @@ from discord.ext import commands
 import datetime
 import discord
 import ast
-import re
 
 from utils import (
     logger, add_data, get_data,create_tables, delete_data, update_data, create_connection, search_anime
@@ -56,15 +55,20 @@ class anilistListener(commands.Cog):
     def __init__(self, client) -> None:
         self.client = client
 
-    async def adding_data(self, ctx, channel, data: dict) -> None:
+    async def adding_data(self, ctx, channel: int, data: dict) -> None:
         await add_data(ctx.guild.id, (channel, ctx.author.id, ctx.guild.id, datetime.datetime.now(), str(data)))
 
     @commands.command(name="add")
     @commands.has_permissions(administrator=True)
     async def add(self, ctx, channel: str, *, anime: str) -> None:
-        try:
-            channel = [int(channel) if channel.isdigit() else channel[2:len(channel)-1]][0]
+        # try:
+            channel = channel.replace("<","").replace("#","").replace(">","")
             details = await search_anime(anime)
+
+            if details == []:
+                await ctx.send("I can't find this anime :pensive: ")
+                return
+
             if details["nextAiringEpisode"] == None:
                 await ctx.send("Episodes for this anime are no longer released")
                 return
@@ -77,7 +81,7 @@ class anilistListener(commands.Cog):
                 "sended": "0"
             }
             
-            sql_data = await get_data(ctx.guild.id)
+            sql_data = await get_data(f"s{ctx.guild.id}")
 
             if sql_data == []:
                 await create_tables(server_id=ctx.guild.id)
@@ -85,27 +89,25 @@ class anilistListener(commands.Cog):
                 await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
                 logger.info(f"{data['name']}/{data['id']} successfully added to the channel {channel} data: {data}")
                 return
-            for item in sql_data:
-                data_dict = ast.literal_eval(item[4])
-                if int(item[0]) == int(channel) and re.findall(rf"'id':\s*{details['id']}", str(item)) != []:
-                    await ctx.send("These Anime exist on this channel")
-                    return
+            
+            print(sql_data["channel_id"], channel)
+            
+            check = list(map(lambda x: x["id"] == details["id"], sql_data["animeData"]))
+            if True in check:
+                await ctx.send("These Anime exist on this channel")
+                return
+            
+            data_dict = sql_data["animeData"]
+            data_dict.append(data)
 
-                if int(item[0]) == int(channel):
-                    data_dict.append(data)
-                    await update_data(table=ctx.guild.id, name="animeData", key=channel, new=str(data_dict))
-                    logger.info(f"{data['name']} {data['id']} successfully added to the channel {channel} data: {data}")
-                    await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
-                    return
-                else:
-                    await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
-                    logger.info(f"{data['name']}/{data['id']} successfully added to the channel {channel} data: {data}")
-                    await self.adding_data(ctx, channel, [data])
-                    return
-        except Exception as e:
-            await ctx.send(":x: Failed to add anime due to an error :x:")
-            logger.error(e)
-            return
+            await update_data(table=ctx.guild.id, name="animeData", key=int(channel), new=str(data_dict))
+            logger.info(f"{data['name']} {data['id']} successfully added to the channel {channel} data: {data}")
+            await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
+
+        # except Exception as e:
+        #     await ctx.send(":x: Failed to add anime due to an error :x:")
+        #     logger.error(e)
+        #     return
 
     @commands.command(name="remove")
     @commands.has_permissions(administrator=True)
