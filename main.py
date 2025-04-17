@@ -112,9 +112,10 @@ async def checkElement(data: dict, server: int, channel: int, anime_today_list: 
 
 async def get_data_server(data: list, anime_today: list):
     try:
-        tasks = [checkElement(data=items, server=data["server_id"], channel=data["channel_id"], anime_today_list=anime_today) for items in data["animeData"]]
-        animeData = await asyncio.gather(*tasks)
-        await update_data(table=data["server_id"], name="animeData", key=data["channel_id"], new=str([x for x in animeData if x is not None]))
+        for item in data:
+            tasks = [checkElement(data=items, server=int(item["server_id"]), channel=int(item["channel_id"]), anime_today_list=anime_today) for items in item["animeData"]]
+            animeData = await asyncio.gather(*tasks)
+            await update_data(table=int(item["server_id"]), name="animeData", key=int(item["channel_id"]), new=str([x for x in animeData if x is not None]))
     except Exception as e:
         logger.error(f"get_data_server has error: {e}")
 
