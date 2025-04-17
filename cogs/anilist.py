@@ -61,7 +61,7 @@ class anilistListener(commands.Cog):
     @commands.command(name="add")
     @commands.has_permissions(administrator=True)
     async def add(self, ctx, channel: str, *, anime: str) -> None:
-        # try:
+        try:
             channel = channel.replace("<","").replace("#","").replace(">","")
             details = await search_anime(anime)
 
@@ -110,10 +110,10 @@ class anilistListener(commands.Cog):
                     logger.info(f"{data['name']} {data['id']} successfully added to the channel {channel} data: {data}")
                     await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
 
-        # except Exception as e:
-        #     await ctx.send(":x: Failed to add anime due to an error :x:")
-        #     logger.error(e)
-        #     return
+        except Exception as e:
+            await ctx.send(":x: Failed to add anime due to an error :x:")
+            logger.error(e)
+            return
 
     @commands.command(name="remove")
     @commands.has_permissions(administrator=True)
