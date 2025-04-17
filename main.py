@@ -97,7 +97,6 @@ async def checkElement(data: dict, server: int, channel: int, anime_today_list: 
         tmp = await send(channel, data, anime_today_list)
         if tmp != "error":
             data.update({'sended': 1})
-            return data
         return data
     if data["name"] in anime_today:
         return data
