@@ -149,16 +149,15 @@ class anilistListener(commands.Cog):
             await ctx.send(":x: Failed to remove anime due to an error :x:")
             logger.error(e)
             return
+        
     @commands.command(name="check")
     @commands.has_permissions(administrator=True)
     async def check(self, ctx) -> None:
-        conn = await create_connection()
-        data = conn.cursor().execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()
-        data = sum([await get_data(str(item[0][1:])) for item in data], [])
+        data = await get_data(f"s{ctx.guild.id}")
         embed_message = discord.Embed(title=f"Anime on the channels", color=discord.Color.magenta())
         for item in data:
-            channel = self.client.get_channel(int(item[0]))
-            embed_message.add_field(name=f'{len(ast.literal_eval(item[4]))} Anime in the #{channel}',value='\n '.join(list(map(name_add_text, ast.literal_eval(item[4])))),inline=False)
+            channel = self.client.get_channel(int(item["channel_id"]))
+            embed_message.add_field(name=f'{len(item["animeData"])} Anime in the #{channel}',value='\n '.join(list(map(name_add_text, item["animeData"]))),inline=False)
         await ctx.send(embed=embed_message)
 
 async def setup(client) -> None:
