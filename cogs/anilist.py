@@ -90,19 +90,25 @@ class anilistListener(commands.Cog):
                 logger.info(f"{data['name']}/{data['id']} successfully added to the channel {channel} data: {data}")
                 return
             
-            print(sql_data["channel_id"], channel)
-            
-            check = list(map(lambda x: x["id"] == details["id"], sql_data["animeData"]))
-            if True in check:
-                await ctx.send("These Anime exist on this channel")
-                return
-            
-            data_dict = sql_data["animeData"]
-            data_dict.append(data)
+            channel_check = list(map(lambda x: x if int(x["channel_id"]) == int(channel) else None, sql_data))[0]
+            for item in channel_check["animeData"]:
+                if item["name"] == data["name"]:
+                    await ctx.send(f":x: ***{data['name']}*** Exist in the <#{channel}>")
+                    return
 
-            await update_data(table=ctx.guild.id, name="animeData", key=int(channel), new=str(data_dict))
-            logger.info(f"{data['name']} {data['id']} successfully added to the channel {channel} data: {data}")
-            await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
+            for item in sql_data:
+                if int(item["channel_id"]) == int(channel):
+                    check = list(map(lambda x: x["id"] == details["id"], sql_data["animeData"]))
+                    if True in check:
+                        await ctx.send("These Anime exist on this channel")
+                        return
+                    
+                    data_dict = sql_data["animeData"]
+                    data_dict.append(data)
+
+                    await update_data(table=ctx.guild.id, name="animeData", key=int(channel), new=str(data_dict))
+                    logger.info(f"{data['name']} {data['id']} successfully added to the channel {channel} data: {data}")
+                    await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
 
         # except Exception as e:
         #     await ctx.send(":x: Failed to add anime due to an error :x:")
