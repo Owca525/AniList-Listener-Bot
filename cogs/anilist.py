@@ -72,18 +72,18 @@ class anilistListener(commands.Cog):
             if details["nextAiringEpisode"] == None:
                 await ctx.send("Episodes for this anime are no longer released")
                 return
-
-            data = {
-                "id": details["id"],
-                "name": details["title"]["romaji"],
-                "image": details["coverImage"]["large"],
-                "nextepisode": details["nextAiringEpisode"],
-                "sended": "0"
-            }
             
             sql_data = await get_data(f"s{ctx.guild.id}")
 
             if sql_data == []:
+                data = {
+                    "id": details["id"],
+                    "name": details["title"]["romaji"],
+                    "image": details["coverImage"]["large"],
+                    "nextepisode": details["nextAiringEpisode"],
+                    "sended": "0"
+                }
+            
                 await create_tables(server_id=ctx.guild.id)
                 await self.adding_data(ctx, channel, [data])
                 await ctx.send(f":white_check_mark: ***{data['name']}*** successfully added to the channel <#{channel}>")
