@@ -1,3 +1,5 @@
+import aiohttp
+import aiohttp.client_exceptions
 from discord.ext import commands, tasks
 import datetime
 import asyncio
@@ -166,4 +168,7 @@ if __name__ == "__main__":
         logger.error("Prefix missing, check config.ini")
         exit()
 
-    client.run(config_data[0])
+    try:
+        client.run(config_data[0])
+    except aiohttp.client_exceptions.ClientConnectionError as error:
+        print(error)
