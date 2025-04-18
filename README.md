@@ -21,6 +21,15 @@ Running the Bot
 ```bash
 python3 main.py
 ```
+Running Bot using Docker <br> <br>
+Build
+```bash
+docker buildx build -t anilistbot .
+```
+Run
+```bash
+docker run -d --name anilistbot
+```
 # Config
 When you start the bot, a `config.ini` file will appear, and inside it:
 - token:  Required for connecting to Discord.

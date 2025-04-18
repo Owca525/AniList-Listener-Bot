@@ -7,7 +7,6 @@ import discord
 import inflect
 import random
 import pytz
-import ast
 import os
 
 from utils import *
@@ -27,19 +26,19 @@ client = commands.Bot(
     intents=discord.Intents.all()
 )
 
-# @client.event
-# async def on_command_error(ctx, error) -> None:
-#     if isinstance(error, commands.CommandNotFound):
-#         await ctx.send("Uknown Command please type help")
-#         return
+@client.event
+async def on_command_error(ctx, error) -> None:
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send("Uknown Command please type help")
+        return
 
-#     if isinstance(error, commands.CheckFailure):
-#         await ctx.send(":no_entry_sign: You don't have permision :no_entry_sign: ")
-#         return
+    if isinstance(error, commands.CheckFailure):
+        await ctx.send(":no_entry_sign: You don't have permision :no_entry_sign: ")
+        return
     
-#     if isinstance(error, commands.MissingRequiredArgument):
-#         await ctx.send("Missing argument please type help")
-#         return
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Missing argument please type help")
+        return
     
 #     logger.error(error)
 
