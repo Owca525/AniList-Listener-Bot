@@ -119,32 +119,27 @@ class anilistListener(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, channel_id, *, anime: str) -> None:
         try:
-            channel = self.client.get_channel(int([int(channel_id) if channel_id.isdigit() else channel_id[2:len(channel_id)-1]][0]))
-            if channel == None:
-                await ctx.send(":x: This channel does not exist :x:")
-                return
+            channel = channel_id.replace("<","").replace("#","").replace(">","")
             
             if anime.lower().replace(" ", "") == "all":
-                await delete_data(ctx.guild.id, channel.id)
-                await ctx.send(f":white_check_mark: Removed everything from <#{channel.id}>")
+                await delete_data(ctx.guild.id, channel)
+                await ctx.send(f":white_check_mark: Removed everything from <#{channel}>")
                 return
             
-            data = await get_data(ctx.guild.id)[0]
-            data_dict = ast.literal_eval(data[4])
-
-            for i, item in enumerate(data):
-                if anime.isdigit() and item["id"] == int(anime):
-                    data_dict.pop(i)
-                    await update_data(table=ctx.guild.id, name="animeData", key=channel_id, new=str(data_dict))
-                    await ctx.send(f":white_check_mark: Successfully removed {item['name']} from <#{channel_id}>")
-                    logger.info(f":white_check_mark: Successfully removed {item['name']} from {channel_id}")
+            data = list(map(lambda x: x if str(x["channel_id"]) == channel else print(x), await get_data(f"s{ctx.guild.id}")))[0]
+            if data == None:
+                await ctx.send(f":x: This anime dosen't exist in this channel :x:")
+                return
+            
+            for i, item in enumerate(data["animeData"]):    
+                if str(item["id"]) == str(anime) or str(item["name"]).lower() == anime.lower():
+                    data = data["animeData"]
+                    data.pop(i)
+                    await update_data(table=ctx.guild.id, name="animeData", key=channel, new=str(data))
+                    await ctx.send(f":white_check_mark: Successfully removed {item['name']} from {channel_id}")
+                    logger.info(f"Successfully removed {item['name']} from {channel_id}")
                     return
-                
-                if anime.lower() == item["name"].lower():
-                    data_dict.pop(i)
-                    await update_data(table=ctx.guild.id, name="animeData", key=channel_id, new=str(data_dict))
-                    logger.info(f":white_check_mark: Successfully removed {item['name']} from {channel_id}")
-                    return
+            await ctx.send(f":x: This anime dosen't exist in this channel :x:")
         except Exception as e:
             await ctx.send(":x: Failed to remove anime due to an error :x:")
             logger.error(e)
