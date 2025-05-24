@@ -8,7 +8,7 @@ import inflect
 import random
 import pytz
 import os
-print
+
 from utils import *
 from utils.config import check_config
 
