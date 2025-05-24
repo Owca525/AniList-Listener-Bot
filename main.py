@@ -23,7 +23,7 @@ config_data = check_config()
 client = commands.Bot(
     command_prefix=config_data[1],
     help_command=None,
-    intents=discord.Intents.all()
+    intents=discord.Intents.default()
 )
 
 @client.event
