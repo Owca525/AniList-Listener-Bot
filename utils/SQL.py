@@ -1,4 +1,3 @@
-import asyncio
 from main import __anilist_database__
 import sqlite3
 import ast
@@ -28,7 +27,7 @@ async def add_data(server_id, data) -> None:
         conn.execute(sql, data)
     conn.close()
 
-async def get_data(table: str) -> dict:
+async def get_data(table: str) -> list:
     """Getting All Data from table"""
     try:
         conn = await create_connection()

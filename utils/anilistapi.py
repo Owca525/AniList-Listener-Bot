@@ -33,13 +33,6 @@ query ($id: Int) {
         duration
         season
         format
-        studios {
-            edges {
-                node {
-                    name
-                }
-            }
-        }
     }
 }
 '''
@@ -75,14 +68,6 @@ query ($search: String) {
     duration
     season
     format
-    studios {
-        edges {
-          node {
-            name
-          }
-        }
-      }
-    }
   }
 }
 '''
@@ -91,15 +76,10 @@ query_airing = '''
 query AiringAnimes($page: Int, $perPage: Int, $sort: [AiringSort], $airingAtGreater: Int, $airingAtLesser: Int) {
     Page(page: $page, perPage: $perPage) {
         airingSchedules(sort: $sort, airingAt_greater: $airingAtGreater, airingAt_lesser: $airingAtLesser) {
-            id
-            mediaId
             media {
                 id
                 title {
                     romaji
-                }
-                coverImage {
-                    large
                 }
             }
             episode
@@ -164,10 +144,10 @@ async def fetch_details(anime: int) -> dict:
         response = await post(url='https://graphql.anilist.co', json={'query': query_data, 'variables': {'id': int(anime)}})
         if response.status_code == 200:
             return response.json()["data"]["Media"]
-        logger.error(f"Error {response.status_code} in id: {anime}")
+        logger.error(f"Error {response.status_code} in id: {anime}",  exc_info=True)
         return response.status_code
     except Exception as e:
-        logger.error(e)
+        logger.error(e, exc_info=True)
         return 404
 
 async def fetch_search(title: str) -> dict:
@@ -176,10 +156,10 @@ async def fetch_search(title: str) -> dict:
         response = await post(url='https://graphql.anilist.co', json={'query': search_query, 'variables': {'search': title}})
         if response.status_code == 200:
             return response.json()["data"]["Page"]["media"]
-        logger.error(f"Error {response.status_code} in name: {title}")
+        logger.error(f"Error {response.status_code} in name: {title}",  exc_info=True)
         return response.status_code
     except Exception as e:
-        logger.error(e)
+        logger.error(e, exc_info=True)
         return 404
 
 async def search_anime(data: str) -> dict:
@@ -192,7 +172,7 @@ async def search_anime(data: str) -> dict:
         details = await fetch_search(data)
     
     if isinstance(details, int):
-        return []
+        return {}
         
     if details != [] and isinstance(details, list):
         cache[data] = details[0]

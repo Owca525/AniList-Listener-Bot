@@ -1,29 +1,30 @@
 import aiohttp
 import aiohttp.client_exceptions
 from discord.ext import commands, tasks
-import datetime
-import asyncio
 import discord
 import inflect
-import random
-import pytz
 import os
+
+import pytz
 
 from utils import *
 from utils.config import check_config
 
 __current_location__ = os.path.dirname(__file__)
 
-__version__ = "1.2"
+__version__ = "2.0"
 __anilist_database__ = __current_location__ + "/db/anilist.db"
 
 inf = inflect.engine()
 config_data = check_config()
 
+intents = discord.Intents.default()
+intents.message_content = True
+
 client = commands.Bot(
     command_prefix=config_data[1],
     help_command=None,
-    intents=discord.Intents.default()
+    intents=intents
 )
 
 @client.event
@@ -40,7 +41,7 @@ async def on_command_error(ctx, error) -> None:
         await ctx.send("Missing argument please type help")
         return
     
-#     logger.error(error)
+    logger.error(error, exc_info=True)
 
 async def initial_database():
     if os.path.exists(__current_location__ + "/db") != True:
@@ -53,80 +54,22 @@ async def initial_database():
 @client.event
 async def on_ready() -> None:
     await initial_database()
-    for filename in os.listdir(f'{__file__[:__file__.rfind("/")+1]}cogs'):
+    for filename in os.listdir(f'{__current_location__}/cogs'):
          if filename.endswith('.py') and not filename.startswith('_'):
             try:
                 await client.load_extension(f'cogs.{filename[:-3]}')
             except Exception as error:
                 logger.critical(f'{error}')
-
+    try:
+        synced = await client.tree.sync()
+        logger.info(f"Synced {len(synced)} commands")
+    except Exception as e:
+        logger.error(e, exc_info=True)
     await change_status("online")
+
+    await dataBase_Background_Task.start()
     await client.wait_until_ready() 
     logger.info(f'Connected To {client.user.name}')
-    await anilist_background_task.start()
-    await clear_cache.start()
-
-async def send(channel, data, today_data):
-    try:
-        channel = client.get_channel(channel)
-        await asyncio.sleep(random.uniform(0.1, 2.0))
-        number_episode = data["nextepisode"]["episode"]
-        for item in today_data:
-            if item["title"] == data["name"]:
-                number_episode = item["anime_data"]["episode"]
-        Date = pytz.timezone('Europe/Zagreb').localize(datetime.datetime.utcfromtimestamp(data["nextepisode"]["airingAt"]))
-        
-        # Creating Embed
-        embed = discord.Embed(title=f"Today releases {inf.ordinal(number_episode)} episode of {data['name']}", description=f"It will come out at {Date.strftime('%H:%M')}", color=discord.Colour.dark_blue())
-        embed.set_image(url=data["image"])
-        embed.set_footer(text=f"ID: {data['id']}")
-        await channel.send(embed=embed)
-        
-        # logger.info(f"Data anime {data['name']} ({data['id']}) sended succesfull in {channel}, data: {data}")
-    except Exception as e:
-        logger.error(f"Sending anime data {data['name']} ({data['id']}) Failed in channel {channel} error: {e}, data: {data}")
-        return "error"
-
-async def checkElement(data: dict, server: int, channel: int, anime_today_list: list):
-    if data["nextepisode"] == None:
-        logger.info(f"Deleting {data['name']} ({data['id']}) from server {server}")
-        return None
-    anime_today = [item["title"] for item in anime_today_list]
-    if data["name"] in anime_today and data["sended"] != 1:
-        tmp = await send(channel, data, anime_today_list)
-        if tmp != "error":
-            data.update({'sended': 1})
-        return data
-    if data["name"] in anime_today:
-        return data
-    new_data = await search_anime(str(data["id"]))
-    data.update({
-            'nextepisode': new_data["nextAiringEpisode"], 
-            'sended': 0,
-        }
-    )
-    logger.info(f"Anime {data['name']} ({data['id']}) information Updated: {data}")
-    return data
-
-async def get_data_server(data: list, anime_today: list):
-    try:
-        for item in data:
-            tasks = [checkElement(data=items, server=int(item["server_id"]), channel=int(item["channel_id"]), anime_today_list=anime_today) for items in item["animeData"]]
-            animeData = await asyncio.gather(*tasks)
-            await update_data(table=int(item["server_id"]), name="animeData", key=int(item["channel_id"]), new=str([x for x in animeData if x is not None]))
-    except Exception as e:
-        logger.error(f"get_data_server has error: {e}")
-
-async def sort_data_name(data):
-    return {"title": data['media']["title"]["romaji"], "anime_data": data}
-
-@tasks.loop(hours=8)
-async def clear_cache():
-    try:
-        cache.clear()
-        logger.info("Cache AnilistApi Clear: Task done")
-    except Exception as e:
-        logger.error(f"Failed clear cache: {e}")
 
 async def change_status(status: str):
     match status:
@@ -138,26 +81,78 @@ async def change_status(status: str):
         case "offline":
             await client.change_presence(
                 status=discord.Status.do_not_disturb,
-                activity=discord.Game(name="Api anilist is now offline"),
+                activity=discord.Game(name="Anilist Is Offline"),
             )
+            
+async def checkAnime(serverDatabse, today_anime):
+    try:
+        IDList = set(map(lambda x: x["id"], today_anime))
+        for currentchannel in serverDatabse:
+            checking = list(filter(lambda x: x["id"] in IDList, currentchannel["animeData"]))
+            for anime in checking:
+                if anime["sended"] == 1:
+                    return
+                channel = client.get_channel(int(currentchannel["channel_id"]))
+                current = list(filter(lambda x: x["id"] == anime["id"], today_anime))[0]
+                Date = pytz.timezone('Europe/Zagreb').localize(datetime.datetime.utcfromtimestamp(current["data"]["airing"]))
+                # Creating Embed
+                embed = discord.Embed(title=f"Today releases {inf.ordinal(current["data"]["episode"])} episode of {current["data"]['title']}", description=f"It will come out at {Date.strftime('%H:%M')}", color=discord.Colour.dark_blue())
+                embed.set_image(url=anime["image"])
+                embed.set_footer(text=f"ID: {current["id"]}")
+                await channel.send(embed=embed)
+                # Checking Anime
+                animeData = list(filter(lambda x: x["id"] != anime["id"], currentchannel["animeData"]))
+                if anime["nextepisode"] != None:
+                    current.update({ "sended": 1 })
+                    
+                await update_data(table=int(currentchannel["server_id"]), name="animeData", key=int(currentchannel["channel_id"]), new=str(list(filter(lambda x: x is not None, animeData))))
+                logger.info(f"Updated {current["id"]}")
+                await dataBase_Check(today_anime)
+    except Exception as e:
+        logger.error(f"Error in checkAnime: {e}", exc_info=True)
 
-@tasks.loop(minutes=10)
-async def anilist_background_task() -> None:
+@tasks.loop(hours=8)
+async def clear_cache():
+    try:
+        cache.clear()
+        logger.info("Cache AnilistApi Clear: Task done")
+    except Exception as e:
+        logger.error(f"Failed clear cache: {e}", exc_info=True)
+
+async def dataBase_Check(today_anime):
+    try:
+        IDList = set(map(lambda x: x["id"], today_anime))
+        for item in await get_all_data():
+            for curchannel in item:
+                not_today = list(filter(lambda x: x["id"] not in IDList, curchannel["animeData"]))
+                # animeData = list(map(lambda x: x.update({'sended': 0}), not_today))
+                animeData = []
+                for anime in not_today:
+                    tmp = anime
+                    tmp.update({ "sended": 0 })
+                    animeData.append(tmp)
+                await update_data(table=int(curchannel["server_id"]), name="animeData", key=int(curchannel["channel_id"]), new=str([*list(filter(lambda x: x is not None, animeData)), *list(filter(lambda x: x["id"] in IDList, curchannel["animeData"]))]))
+        logger.info("Checking Databse Done")
+    except Exception as e:
+        logger.error(f"Failed Checking Database: {e}", exc_info=True)
+
+@tasks.loop(seconds=30)
+async def dataBase_Background_Task():
     try:
         logger.info("Running Task anilist_background_task")
-        today = await get_today_anime()
-        if today == []:
+        today_anime = await get_today_anime()
+        if today_anime == []:
             await change_status("offline")
-            logger.info("Api anilist is not avaible")
+            logger.warning("API Anilist is current Offline")
             return
         await change_status("online")
-        # TODO: FIX get_all_data to support multichannel
-        anime_today = await asyncio.gather(*[sort_data_name(item) for item in today])
-        task = [get_data_server(item, anime_today) for item in await get_all_data()]
-        await asyncio.gather(*task)
-        logger.info("The task anilist_background_task completed successfully")
+        
+        today_anime = list(map(lambda x: { "id": x["media"]["id"], "data": { "title": x["media"]["title"]["romaji"], "airing": x["airingAt"], "episode": x["episode"] } }, today_anime))
+        await dataBase_Check(today_anime)
+        for item in await get_all_data():
+            await checkAnime(item, today_anime)
     except Exception as e:
-        logger.error(f"Failed task anilist_background_task: {e}")
+        logger.error(f"Failed Task: dataBase_Background_Task {e}", exc_info=True)
 
 if __name__ == "__main__":
     if config_data[0] == "":
@@ -170,4 +165,4 @@ if __name__ == "__main__":
     try:
         client.run(config_data[0])
     except aiohttp.client_exceptions.ClientConnectionError as error:
-        print(error)
+        logger.error(error)
