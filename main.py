@@ -104,6 +104,7 @@ async def checkAnime(serverDatabse, today_anime):
                 animeData = list(filter(lambda x: x["id"] != anime["id"], currentchannel["animeData"]))
                 if anime["nextepisode"] != None:
                     current.update({ "sended": 1 })
+                    animeData.append(current)
                     
                 await update_data(table=int(currentchannel["server_id"]), name="animeData", key=int(currentchannel["channel_id"]), new=str(list(filter(lambda x: x is not None, animeData))))
                 logger.info(f"Updated {current["id"]}")
