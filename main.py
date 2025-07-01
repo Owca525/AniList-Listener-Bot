@@ -101,7 +101,7 @@ async def checkAnime(serverDatabse, today_anime):
                 embed.set_footer(text=f"ID: {current["id"]}")
                 await channel.send(embed=embed)
                 # Checking Anime
-                animeData = list(filter(lambda x: x["id"] != anime["id"], currentchannel["animeData"]))
+                animeData = list(filter(lambda x: x["id"] != current["id"], currentchannel["animeData"]))
                 if anime["nextepisode"] != None:
                     current.update({ "sended": 1 })
                     animeData.append(current)
@@ -137,7 +137,7 @@ async def dataBase_Check(today_anime):
     except Exception as e:
         logger.error(f"Failed Checking Database: {e}", exc_info=True)
 
-@tasks.loop(seconds=30)
+@tasks.loop(hours=1)
 async def dataBase_Background_Task():
     try:
         logger.info("Running Task anilist_background_task")
