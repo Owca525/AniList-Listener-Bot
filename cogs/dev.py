@@ -1,5 +1,6 @@
 from discord.ext import commands
 from datetime import datetime
+from main import __current_location__
 import platform
 import discord
 import asyncio
@@ -22,6 +23,15 @@ class devcog(commands.Cog):
         try:
             file = discord.File(f"{log_file}", filename=str(log_file))
             await ctx.send(f"Log Name File: {os.path.basename(log_file)}", file=file)
+        except Exception as e:
+            await ctx.send(f'Error: {e}')
+
+    @commands.command()
+    @commands.is_owner()
+    async def sendDatabase(self,ctx) -> None:
+        try:
+            file = discord.File(f"{__current_location__}/db/anilist.db", filename="anilist.db")
+            await ctx.send(f"Database: {os.path.basename(log_file)}", file=file)
         except Exception as e:
             await ctx.send(f'Error: {e}')
 
