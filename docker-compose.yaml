@@ -2,7 +2,8 @@ name: anilistbot
 services:
   anilistbot:
     build:
-      context: https://github.com/Owca525/AniList-Listener-Bot.git
+      context: .
+      dockerfile: Dockerfile
     container_name: anilistbot
     volumes:
       - /DATA/AppData/anilistbot:/app
@@ -20,12 +21,10 @@ services:
       icon: https://anilist.co/img/icons/icon.svg
     restart: on-failure
     ports: []
-    volumes: []
     devices: []
     cap_add: []
     network_mode: host
     privileged: false
-    container_name: ""
     hostname: ""
 x-casaos:
   architectures:
