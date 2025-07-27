@@ -97,7 +97,10 @@ async def checkAnime(serverDatabse, today_anime):
                 Date = pytz.timezone('Europe/Zagreb').localize(datetime.datetime.utcfromtimestamp(current["data"]["airing"]))
                 # Creating Embed
                 embed = discord.Embed(title=f"Today releases {inf.ordinal(current["data"]["episode"])} episode of {current["data"]['title']}", description=f"It will come out at {Date.strftime('%H:%M')}", color=discord.Colour.dark_blue())
-                embed.set_image(url=anime["image"])
+                try:
+                    embed.set_image(url=anime["image"])
+                except Exception as e:
+                    print(e, anime)
                 embed.set_footer(text=f"ID: {current["id"]}")
                 await channel.send(embed=embed)
                 # Checking Anime
