@@ -1,0 +1,55 @@
+name: anilistbot
+services:
+  anilistbot:
+    build:
+      context: /DATA/AppData/anilistbot
+      dockerfile: Dockerfile
+    container_name: anilistbot
+    volumes:
+      - /DATA/AppData/anilistbot:/app
+    working_dir: /app
+    cpu_shares: 10
+    command:
+      - python
+      - main.py
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    image: anilistbot:latest
+    labels:
+      icon: https://anilist.co/img/icons/icon.svg
+    restart: on-failure
+    ports: []
+    volumes: []
+    devices: []
+    cap_add: []
+    network_mode: host
+    privileged: false
+    container_name: ""
+    hostname: ""
+x-casaos:
+  architectures:
+    - amd64
+  author: Owca525
+  category: unknown
+  description:
+    en_us: ""
+  developer: unknown
+  hostname: ""
+  icon: https://anilist.co/img/icons/icon.svg
+  image: null
+  index: /
+  is_uncontrolled: false
+  main: anilistbot
+  port_map: ""
+  scheme: http
+  store_app_id: anilistbot
+  tagline:
+    en_us: Anilist Listener Bot
+  thumbnail: ""
+  tips:
+    custom: None
+  title:
+    custom: ""
+    en_us: Anilist Listener Bot
