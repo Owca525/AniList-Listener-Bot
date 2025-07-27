@@ -1,4 +1,3 @@
-name: anilistbot
 services:
   anilistbot:
     build:
