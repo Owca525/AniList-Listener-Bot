@@ -100,7 +100,7 @@ async def checkAnime(serverDatabse, today_anime):
                 try:
                     embed.set_image(url=anime["image"])
                 except Exception as e:
-                    print(e, anime)
+                    logger.error(e, anime, exc_info=True)
                 embed.set_footer(text=f"ID: {current["id"]}")
                 await channel.send(embed=embed)
                 # Checking Anime

@@ -152,14 +152,20 @@ class anilistListener(commands.Cog):
     @commands.has_permissions(administrator=True)
     @discord.app_commands.command(name="checklist", description="Check Anime on the Channels")
     async def check(self, interaction: discord.Interaction) -> None:
-        await interaction.response.defer(thinking=True)
-        data = await get_data(f"s{interaction.guild.id}")
-        embed_message = discord.Embed(title=f"Anime on the channels", color=discord.Color.magenta())
-        for item in data:
-            channel = self.client.get_channel(int(item["channel_id"]))
-            embed_message.add_field(name=f'{len(item["animeData"])} Anime in the #{channel}',value='\n '.join(list(map(name_add_text, item["animeData"]))),inline=False)
-        await interaction.followup.send(embed=embed_message)
-
+        try:
+            await interaction.response.defer(thinking=True)
+            data = await get_data(f"s{interaction.guild.id}")
+            logger.info(data)
+            embed_message = discord.Embed(title=f"Anime on the channels", color=discord.Color.magenta())
+            for item in data:
+                channel = self.client.get_channel(int(item["channel_id"]))
+                embed_message.add_field(name=f'{len(item["animeData"])} Anime in the #{channel}',value='\n '.join(list(map(name_add_text, item["animeData"]))),inline=False)
+            await interaction.followup.send(embed=embed_message)
+        except Exception as e:
+            await interaction.followup.send(":x: Failed Read Database")
+            logger.error(e, exc_info=True)
+            return
+        
 async def setup(client) -> None:
     await client.add_cog(anilistListener(client))
     await client.add_cog(anilistCommands(client))
