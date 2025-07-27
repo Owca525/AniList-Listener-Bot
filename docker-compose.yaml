@@ -2,8 +2,7 @@ name: anilistbot
 services:
   anilistbot:
     build:
-      context: /DATA/AppData/anilistbot
-      dockerfile: Dockerfile
+      context: https://github.com/Owca525/AniList-Listener-Bot.git
     container_name: anilistbot
     volumes:
       - /DATA/AppData/anilistbot:/app
@@ -35,7 +34,7 @@ x-casaos:
   category: unknown
   description:
     en_us: ""
-  developer: unknown
+  developer: Owca525
   hostname: ""
   icon: https://anilist.co/img/icons/icon.svg
   image: null
